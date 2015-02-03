@@ -232,6 +232,40 @@ describe Openc::JsonSchema do
       )
     end
 
+    specify 'when property of wrong format' do
+      schema = {
+        '$schema' => 'http://json-schema.org/draft-04/schema#',
+        'type' => 'object',
+        'properties' => {
+          'aaa' => {'type' => 'string', 'format' => 'date'}
+        }
+      }
+      record = {'aaa' => 'zzz'}
+
+      expect([schema, record]).to fail_validation_with(
+        :type => :format_mismatch,
+        :path => 'aaa',
+        :expected_format => 'yyyy-mm-dd'
+      )
+    end
+
+    specify 'when property with format is empty' do
+      schema = {
+        '$schema' => 'http://json-schema.org/draft-04/schema#',
+        'type' => 'object',
+        'properties' => {
+          'aaa' => {'type' => 'string', 'format' => 'date'}
+        }
+      }
+      record = {'aaa' => ''}
+
+      expect([schema, record]).to fail_validation_with(
+        :type => :format_mismatch,
+        :path => 'aaa',
+        :expected_format => 'yyyy-mm-dd'
+      )
+    end
+
     context 'when schema includes $ref' do
       specify 'when data is valid' do
         schema_path = 'spec/schemas/aaa.json'
