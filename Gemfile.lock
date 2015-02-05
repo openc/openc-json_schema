@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    openc-json_schema (0.0.1)
+    openc-json_schema (0.0.2)
       json-schema (= 2.5.0)
 
 GEM
