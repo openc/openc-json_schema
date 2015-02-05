@@ -89,6 +89,51 @@ describe Openc::JsonSchema do
         )
       end
 
+      specify 'and we are switching on a nested enum field' do
+        schema = {
+          '$schema' => 'http://json-schema.org/draft-04/schema#',
+          'type' => 'object',
+          'properties' => {
+            'xxx' => {
+              'type' => 'object',
+              'properties' => {
+                'aaa' => {
+                  'type' => 'object',
+                  'oneOf' => [{
+                    'properties' => {
+                      'a_type' => {
+                        'enum' => ['a1']
+                      },
+                      'a_properties' => {
+                        'type' => 'object',
+                        'required' => ['bbb'],
+                      }
+                    }
+                  }, {
+                    'properties' => {
+                      'a_type' => {
+                        'enum' => ['a2']
+                      },
+                      'a_properties' => {
+                        'type' => 'object',
+                        'required' => ['ccc']
+                      }
+                    }
+                  }]
+                }
+              }
+            }
+          }
+        }
+
+        record = {'xxx' => {'aaa' => {'a_type' => 'a1', 'a_properties' => {}}}}
+
+        expect([schema, record]).to fail_validation_with(
+          :type => :missing,
+          :path => 'xxx.aaa.a_properties.bbb'
+        )
+      end
+
       specify 'and we are not switching on an enum field' do
         schema = {
           '$schema' => 'http://json-schema.org/draft-04/schema#',

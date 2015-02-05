@@ -34,19 +34,24 @@ module Openc
           if error[:message].match(/did not match any/)
             path_elements = fragment_to_path(error[:fragment]).split('.')
 
-            raise "Deeply nested OneOf error at: #{error[:fragment]}" unless path_elements.size == 1
+            record_fragment = record
+            schema_fragment = schema
 
-            record_fragment = record[path_elements[0]]
-            schema_fragments = schema['properties'][path_elements[0]]['oneOf']
+            path_elements.each do |element|
+              record_fragment = record_fragment[element]
+              schema_fragment = schema_fragment['properties'][element]
+            end
 
-            unless schema_fragments.nil?
-              schema_fragments.each do |s|
+            one_of_schemas = schema_fragment['oneOf']
+
+            unless one_of_schemas.nil?
+              one_of_schemas.each do |s|
                 s['properties'].each do |k, v|
                   next if v['enum'].nil?
 
                   if v['enum'].include?(record_fragment[k])
                     error1 = validate(s, schema_dir, record_fragment)
-                    return error1.merge(:path => "#{path_elements[0]}.#{error1[:path]}")
+                    return error1.merge(:path => "#{path_elements.join('.')}.#{error1[:path]}")
                   end
                 end
               end
