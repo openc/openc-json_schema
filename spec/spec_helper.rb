@@ -21,14 +21,12 @@ end
 RSpec::Matchers.define(:fail_validation_with) do |expected|
   match do |actual|
     schema_or_path, record = actual
-    error = get_error(schema_or_path, record)
-    expect(error).to eq(expected), "Expected #{expected}, received #{error}"
+    @error = get_error(schema_or_path, record)
+    expect(@error).to eq(expected)
   end
 
   failure_message do |actual|
-    schema_or_path, record = actual
-    error = get_error(schema_or_path, record)
-    "Expected error to be #{expected}, but was #{error}"
+    "Expected error to be #{expected}, but was #{@error}"
   end
 end
 

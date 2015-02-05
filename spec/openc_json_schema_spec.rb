@@ -283,5 +283,22 @@ describe Openc::JsonSchema do
         )
       end
     end
+
+    specify 'when schema includes oneOfs which contain $refs' do
+      schema_path = 'spec/schemas/ccc.json'
+      record = {
+        'ccc' => {
+          'ccc_type' => 'ddd',
+          'ccc_properties' => {
+            'ddd' => 'not-a-number'
+          }
+        }
+      }
+      expect([schema_path, record]).to fail_validation_with(
+        :type => :type_mismatch,
+        :path => 'ccc.ccc_properties.ddd',
+        :allowed_types => ['number'],
+      )
+    end
   end
 end
