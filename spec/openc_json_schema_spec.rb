@@ -329,6 +329,42 @@ describe Openc::JsonSchema do
       end
     end
 
+    context 'when schema includes nested $refs' do
+      specify 'when data is valid' do
+        schema_path = 'spec/schemas/fff.json'
+        record = {'fff' => {'ggg' => {'hhh' => 123}}}
+        expect([schema_path, record]).to be_valid
+      end
+
+      specify 'when data is invalid' do
+        schema_path = 'spec/schemas/fff.json'
+        record = {'fff' => {'ggg' => {'hhh' => '123'}}}
+        expect([schema_path, record]).to fail_validation_with(
+          :type => :type_mismatch,
+          :path => 'fff.ggg.hhh',
+          :allowed_types => ['number']
+        )
+      end
+
+      context 'and schema is an included schema' do
+        specify 'when data is valid' do
+          schema_path = 'spec/schemas/includes/ggg.json'
+          record = {'ggg' => {'hhh' => 123}}
+          expect([schema_path, record]).to be_valid
+        end
+
+        specify 'when data is invalid' do
+          schema_path = 'spec/schemas/includes/ggg.json'
+          record = {'ggg' => {'hhh' => '123'}}
+          expect([schema_path, record]).to fail_validation_with(
+            :type => :type_mismatch,
+            :path => 'ggg.hhh',
+            :allowed_types => ['number']
+          )
+        end
+      end
+    end
+
     specify 'when schema includes oneOfs which contain $refs' do
       schema_path = 'spec/schemas/ccc.json'
       record = {
