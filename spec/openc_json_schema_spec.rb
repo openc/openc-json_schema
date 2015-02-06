@@ -363,6 +363,24 @@ describe Openc::JsonSchema do
           )
         end
       end
+
+      context 'and there is a $ref to something in an outer directory' do
+        specify 'when data is valid' do
+          schema_path = 'spec/schemas/iii.json'
+          record = {'iii' => {'jjj' => {'kkk' => 123}}}
+          expect([schema_path, record]).to be_valid
+        end
+
+        specify 'when data is invalid' do
+          schema_path = 'spec/schemas/iii.json'
+          record = {'iii' => {'jjj' => {'kkk' => '123'}}}
+          expect([schema_path, record]).to fail_validation_with(
+            :type => :type_mismatch,
+            :path => 'iii.jjj.kkk',
+            :allowed_types => ['number']
+          )
+        end
+      end
     end
 
     specify 'when schema includes oneOfs which contain $refs' do
