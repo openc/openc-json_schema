@@ -11,18 +11,11 @@ module Openc
         error = errors[0]
         return if error.nil?
 
-        extract_error(error, record, schema)
+        convert_error(extract_error(error, record, schema))
       end
 
       def extract_error(error, record, schema)
-        case error[:failed_attribute]
-        when 'Required'
-          match = error[:message].match(/required property of '(.*)'/)
-          missing_property = match[1]
-          path = fragment_to_path("#{error[:fragment]}/#{missing_property}")
-
-          {:type => :missing, :path => path}
-        when 'OneOf'
+        if error[:failed_attribute] == 'OneOf'
           if error[:message].match(/did not match any/)
             path_elements = fragment_to_path(error[:fragment]).split('.')
 
@@ -42,13 +35,27 @@ module Openc
                   next if v['enum'].nil?
 
                   if v['enum'].include?(sub_record[k])
-                    sub_error = error[:errors][:"oneof_#{i}"][0]
-                    return extract_error(sub_error, sub_record, sub_schema)
+                    return error[:errors][:"oneof_#{i}"][0]
                   end
                 end
               end
             end
+          end
+        end
 
+        error
+      end
+
+      def convert_error(error)
+        case error[:failed_attribute]
+        when 'Required'
+          match = error[:message].match(/required property of '(.*)'/)
+          missing_property = match[1]
+          path = fragment_to_path("#{error[:fragment]}/#{missing_property}")
+
+          {:type => :missing, :path => path}
+        when 'OneOf'
+          if error[:message].match(/did not match any/)
             {:type => :one_of_no_matches, :path => fragment_to_path(error[:fragment])}
           else
             {:type => :one_of_many_matches, :path => fragment_to_path(error[:fragment])}
