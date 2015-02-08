@@ -1,16 +1,21 @@
+GIT
+  remote: git://github.com/ruby-json-schema/json-schema.git
+  revision: aded4d798a48545184dae7ae0a3bb41ec2794c88
+  ref: aded4d798a48545184dae7ae0a3bb41ec2794c88
+  specs:
+    json-schema (2.5.0)
+      addressable (~> 2.3)
+
 PATH
   remote: .
   specs:
     openc-json_schema (0.0.3)
-      json-schema (= 2.5.0)
 
 GEM
   remote: https://rubygems.org/
   specs:
     addressable (2.3.7)
     diff-lcs (1.2.5)
-    json-schema (2.5.0)
-      addressable (~> 2.3)
     rake (10.4.2)
     rspec (3.1.0)
       rspec-core (~> 3.1.0)
@@ -30,6 +35,7 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 1.7)
+  json-schema!
   openc-json_schema!
   rake (~> 10.0)
   rspec (~> 3.0)

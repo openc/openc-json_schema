@@ -5,17 +5,15 @@ def get_error(schema_or_path, record)
   when Hash
     json_data = schema_or_path.to_json
     filename = Digest::MD5.hexdigest(json_data) + '.json'
-    schema_dir = "spec/tmp"
-    File.open(File.join(schema_dir, filename), 'w') {|f| f.write(json_data)}
-    schema_or_filename = schema_or_path
+    schema_path = File.join('spec', 'tmp', filename)
+    File.open(schema_path, 'w') {|f| f.write(json_data)}
   when String
-    schema_or_filename = File.basename(schema_or_path)
-    schema_dir = File.dirname(schema_or_path)
+    schema_path = schema_or_path
   else
     raise
   end
 
-  error = Openc::JsonSchema.validate(schema_or_filename, schema_dir, record)
+  error = Openc::JsonSchema.validate(schema_path, record)
 end
 
 RSpec::Matchers.define(:fail_validation_with) do |expected|

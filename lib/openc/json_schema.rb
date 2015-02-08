@@ -7,8 +7,8 @@ module Openc
   module JsonSchema
     extend self
 
-    def validate(schema_or_filename, schema_dir, record)
-      Validator.validate(schema_or_filename, schema_dir, record)
+    def validate(schema_path, record)
+      Validator.validate(schema_path, record)
     end
   end
 end
