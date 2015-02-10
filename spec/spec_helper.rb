@@ -1,3 +1,6 @@
+require 'simplecov'
+SimpleCov.start
+
 require 'openc/json_schema'
 
 def get_error(schema_or_path, record)
