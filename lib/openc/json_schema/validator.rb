@@ -76,6 +76,10 @@ module Openc
           match = error[:message].match(/the following values: ([\w\s,]+) in schema/)
           allowed_values = match[1].split(',').map(&:strip)
           {:type => :enum_mismatch, :path => fragment_to_path(error[:fragment]), :allowed_values => allowed_values}
+        when 'AdditionalProperties'
+          match = error[:message].match(/contains additional properties \["(.*)"\] outside of the schema/)
+          extra_properties = match[1].split('", "')
+          {:type => :extra_properties, :path => fragment_to_path(error[:fragment]), :extra_properties => extra_properties}
         else
           if error[:message].match(/must be of format yyyy-mm-dd/)
             {:type => :format_mismatch, :path => fragment_to_path(error[:fragment]), :expected_format => 'yyyy-mm-dd'}

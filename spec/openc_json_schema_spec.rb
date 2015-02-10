@@ -277,6 +277,25 @@ describe Openc::JsonSchema do
       )
     end
 
+    specify 'when additional properties are present but disallowed' do
+      schema = {
+        '$schema' => 'http://json-schema.org/draft-04/schema#',
+        'type' => 'object',
+        'properties' => {
+          'aaa' => {'type' => 'number'}
+        },
+        'additionalProperties' => false
+      }
+
+      record = {'aaa' => 1, 'bbb' => 2, 'ccc' => 3}
+
+      expect([schema, record]).to fail_validation_with(
+        :type => :extra_properties,
+        :path => '',
+        :extra_properties => ['bbb', 'ccc']
+      )
+    end
+
     specify 'when property of wrong format' do
       schema = {
         '$schema' => 'http://json-schema.org/draft-04/schema#',
