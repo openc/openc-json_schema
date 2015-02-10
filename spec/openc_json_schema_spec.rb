@@ -429,5 +429,32 @@ describe Openc::JsonSchema do
         :allowed_types => ['number'],
       )
     end
+
+    specify '' do
+      schema = {
+        '$schema' => 'http://json-schema.org/draft-04/schema#',
+        'type' => 'object',
+        'properties' => {
+          'aaa' => {
+            'oneOf' => [
+              {
+                'type' => 'string',
+                'format' => 'date'
+              },
+              {
+                'type' => 'integer',
+                'maxLength' => 2
+              }
+            ]
+          }
+        }
+      }
+      record = {'aaa' => 'not-a-date'}
+      expect([schema, record]).to fail_validation_with(
+        :type => :format_mismatch,
+        :path => 'aaa',
+        :expected_format => 'yyyy-mm-dd'
+      )
+    end
   end
 end

@@ -41,15 +41,38 @@ module Openc
 
             one_of_schemas = schema['oneOf']
 
-            unless one_of_schemas.nil?
-              one_of_schemas.each_with_index do |s, i|
-                s['properties'].each do |k, v|
-                  next if v['enum'].nil?
+            schemas_for_type_with_ix = case record
+            when Hash
+              one_of_schemas.each_with_index.reject {|s, ix| s['properties'].nil?}
+            when String
+              one_of_schemas.each_with_index.select {|s, ix| s['type'] == 'string' || (s['type'].nil? && s['properties'].nil?)}
+            when Integer
+              one_of_schemas.each_with_index.select {|s, ix| s['type'] == 'integer'}
+            when Array
+              one_of_schemas.each_with_index.select {|s, ix| s['type'] == 'array'}
+            else
+              raise "Unexpected type: #{record}"
+            end
 
-                  if v['enum'].include?(record[k])
-                    return error[:errors][:"oneof_#{i}"][0]
+            case schemas_for_type_with_ix.size
+            when 0
+              return error
+            when 1
+              ix = schemas_for_type_with_ix[0][1]
+              return error[:errors][:"oneof_#{ix}"][0]
+            else
+              if record.is_a?(Hash)
+                schemas_for_type_with_ix.each do |s, ix|
+                  s['properties'].each do |k, v|
+                    next if v['enum'].nil?
+
+                    if v['enum'].include?(record[k])
+                      return error[:errors][:"oneof_#{ix}"][0]
+                    end
                   end
                 end
+              else
+                return error
               end
             end
           end
@@ -72,6 +95,8 @@ module Openc
           else
             {:type => :one_of_many_matches, :path => fragment_to_path(error[:fragment])}
           end
+        when 'AnyOf'
+          {:type => :any_of_no_matches, :path => fragment_to_path(error[:fragment])}
         when 'MinLength'
           match = error[:message].match(/minimum string length of (\d+) in/)
           min_length = match[1].to_i
