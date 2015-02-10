@@ -402,7 +402,18 @@ describe Openc::JsonSchema do
       end
     end
 
-    specify 'when schema includes oneOfs which contain $refs' do
+    specify 'when schema includes oneOfs which contain $refs directly' do
+      schema_path = 'spec/schemas/lll.json'
+      record = {
+        'mmm' => []
+      }
+      expect([schema_path, record]).to fail_validation_with(
+        :type => :one_of_no_matches,
+        :path => 'mmm'
+      )
+    end
+
+    specify 'when schema includes oneOfs which contain $refs indirectly' do
       schema_path = 'spec/schemas/ccc.json'
       record = {
         'ccc' => {
