@@ -4,13 +4,7 @@ module Openc
       extend self
 
       def validate(schema_path, record)
-        validator = JSON::Validator.new(
-          schema_path,
-          record,
-          :record_errors => true,
-          :errors_as_objects => true,
-          :validate_schema => true
-        )
+        validator = Utils.load_validator(schema_path, record)
         errors = validator.validate
 
         # For now, we just handle the first error.
@@ -25,7 +19,7 @@ module Openc
           if error[:message].match(/did not match any/)
             path_elements = fragment_to_path(error[:fragment]).split('.')
 
-            json_schema = validator.instance_variable_get(:@base_schema)
+            json_schema = Utils.extract_json_schema(validator)
             schema = json_schema.schema
 
             path_elements.each do |element|

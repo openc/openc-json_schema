@@ -457,4 +457,70 @@ describe Openc::JsonSchema do
       )
     end
   end
+
+  describe '.convert_dates' do
+    it 'converts dates when schema has no $refs' do
+      schema = {
+        '$schema' => 'http://json-schema.org/draft-04/schema#',
+        'type' => 'object',
+        'properties' => {
+          'aaa' => {
+            'type' => 'string',
+            'format' => 'date'
+          },
+          'bbb' => {
+            'type' => 'array',
+            'items' => {
+              'type' => 'string',
+              'format' => 'date'
+            }
+          },
+          'ccc' => {
+            'type' => 'object',
+            'properties' => {
+              'ddd' => {
+                'type' => 'string',
+                'format' => 'date'
+              }
+            }
+          }
+        }
+      }
+
+      record = {
+        'aaa' => '2015-01-01 extra',
+        'bbb' => ['2015-01-01 extra', '2015-01-01 extra'],
+        'ccc' => {
+          'ddd' =>  '2015-01-01 extra'
+        }
+      }
+
+      expect([schema, record]).to convert_dates_to({
+        'aaa' => '2015-01-01',
+        'bbb' => ['2015-01-01', '2015-01-01'],
+        'ccc' => {
+          'ddd' =>  '2015-01-01'
+        }
+      })
+    end
+
+    it 'converts dates when schema has $refs' do
+      schema_path = 'spec/schemas/yyy.json'
+      record = {
+        'aaa' => '2015-01-01 extra',
+        'bbb' => ['2015-01-01 extra', '2015-01-01 extra'],
+        'ccc' => {
+          'ddd' =>  '2015-01-01 extra'
+        }
+      }
+
+      expect([schema_path, record]).to convert_dates_to({
+        'aaa' => '2015-01-01',
+        'bbb' => ['2015-01-01', '2015-01-01'],
+        'ccc' => {
+          'ddd' =>  '2015-01-01'
+        }
+      })
+    end
+  end
 end

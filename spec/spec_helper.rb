@@ -3,7 +3,7 @@ SimpleCov.start
 
 require 'openc/json_schema'
 
-def get_error(schema_or_path, record)
+def get_schema_path(schema_or_path)
   case schema_or_path
   when Hash
     json_data = schema_or_path.to_json
@@ -16,13 +16,13 @@ def get_error(schema_or_path, record)
     raise
   end
 
-  error = Openc::JsonSchema.validate(schema_path, record)
+  schema_path
 end
 
 RSpec::Matchers.define(:fail_validation_with) do |expected|
   match do |actual|
     schema_or_path, record = actual
-    @error = get_error(schema_or_path, record)
+    @error = Openc::JsonSchema.validate(get_schema_path(schema_or_path), record)
     expect(@error).to eq(expected)
   end
 
@@ -34,7 +34,17 @@ end
 RSpec::Matchers.define(:be_valid) do
   match do |actual|
     schema_or_path, record = actual
-    error = get_error(schema_or_path, record)
+    error = Openc::JsonSchema.validate(get_schema_path(schema_or_path), record)
     expect(error).to eq(nil)
+  end
+end
+
+RSpec::Matchers.define(:convert_dates_to) do |expected|
+  match do |actual|
+    schema_or_path, record = actual
+    schema_path = get_schema_path(schema_or_path)
+
+    converted_record = Openc::JsonSchema.convert_dates(schema_path, record)
+    expect(converted_record).to eq(expected)
   end
 end
