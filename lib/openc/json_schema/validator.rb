@@ -77,53 +77,72 @@ module Openc
 
       def convert_error(error)
         path = fragment_to_path(error[:fragment])
+        extra_params = {}
 
         case error[:failed_attribute]
         when 'Required'
           match = error[:message].match(/required property of '(.*)'/)
           missing_property = match[1]
           path = fragment_to_path("#{error[:fragment]}/#{missing_property}")
-          "Missing required property: #{path}"
+          type = :missing
+          message = "Missing required property: #{path}"
         when 'AdditionalProperties'
           match = error[:message].match(/contains additional properties \["(.*)"\] outside of the schema/)
           additional_property = match[1].split('", "')[0]
           path = fragment_to_path("#{error[:fragment]}/#{additional_property}")
-          "Disallowed additional property: #{path}"
+          type = :additional
+          message = "Disallowed additional property: #{path}"
         when 'OneOf'
           if error[:message].match(/did not match any/)
-            "No match for property: #{path}"
+            type = :one_of_no_matches
+            message = "No match for property: #{path}"
           else
-            "Multiple possible matches for property: #{path}"
+            type = :one_of_many_matches
+            message = "Multiple possible matches for property: #{path}"
           end
         when 'AnyOf'
-          "No match for property: #{path}"
+          type = :any_of_no_matches
+          message = "No match for property: #{path}"
         when 'MinLength'
           match = error[:message].match(/minimum string length of (\d+) in/)
           min_length = match[1].to_i
-          "Property too short: #{path} (must be at least #{min_length} characters)"
+          type = :too_short
+          message = "Property too short: #{path} (must be at least #{min_length} characters)"
+          extra_params = {:length => min_length}
         when 'MaxLength'
           match = error[:message].match(/maximum string length of (\d+) in/)
           max_length = match[1].to_i
-          "Property too long: #{path} (must be at most #{max_length} characters)"
+          type = :too_long
+          message = "Property too long: #{path} (must be at most #{max_length} characters)"
+          extra_params = {:length => max_length}
         when 'TypeV4'
           match = error[:message].match(/the following types?: ([\w\s,]+) in schema/)
           allowed_types = match[1].split(',').map(&:strip)
-          "Property of wrong type: #{path} (must be of type #{allowed_types.join(', ')})"
+          type = :type_mismatch
+          message = "Property of wrong type: #{path} (must be of type #{allowed_types.join(', ')})"
+          extra_params = {:allowed_types => allowed_types}
         when 'Enum'
           match = error[:message].match(/the following values: ([\w\s,]+) in schema/)
           allowed_values = match[1].split(',').map(&:strip)
+          type = :enum_mismatch
           if allowed_values.size == 1
-            "Property must have value #{allowed_values[0]}: #{path}"
+            message = "Property must have value #{allowed_values[0]}: #{path}"
           else
-            "Property not an allowed value: #{path} (must be one of #{allowed_values.join(', ')})"
+            message = "Property not an allowed value: #{path} (must be one of #{allowed_values.join(', ')})"
           end
+          extra_params = {:allowed_values => allowed_values}
         else
           if error[:message].match(/must be of format yyyy-mm-dd/)
-            "Property not of expected format: #{path} (must be of format yyyy-mm-dd)"
+            type = :format_mismatch
+            message = "Property not of expected format: #{path} (must be of format yyyy-mm-dd)"
+            extra_params = {:expected_format => 'yyyy-mm-dd'}
           else
-            "Error of unknown type: #{path} (#{error[:message]})"
+            type = :unknown
+            message = "Error of unknown type: #{path} (#{error[:message]})"
           end
         end
+
+        {:type => type, :path => path, :message => message}.merge(extra_params)
       end
 
       def fragment_to_path(fragment)

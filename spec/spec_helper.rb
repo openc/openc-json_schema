@@ -22,7 +22,7 @@ end
 RSpec::Matchers.define(:fail_validation_with) do |expected|
   match do |actual|
     schema_or_path, record = actual
-    @error = Openc::JsonSchema.validate(get_schema_path(schema_or_path), record)
+    @error = Openc::JsonSchema.validate(get_schema_path(schema_or_path), record)[:message]
     expect(@error).to eq(expected)
   end
 
