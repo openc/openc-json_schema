@@ -20,11 +20,8 @@ describe Openc::JsonSchema do
         'required' => ['aaa'],
       }
       record = {}
-
-      expect([schema, record]).to fail_validation_with(
-        :type => :missing,
-        :path => 'aaa'
-      )
+      error = 'Missing required property: aaa'
+      expect([schema, record]).to fail_validation_with(error)
     end
 
     specify 'when required nested property missing' do
@@ -40,11 +37,24 @@ describe Openc::JsonSchema do
         }
       }
       record = {'aaa' => {}}
+      error = 'Missing required property: aaa.bbb'
+      expect([schema, record]).to fail_validation_with(error)
+    end
 
-      expect([schema, record]).to fail_validation_with(
-        :type => :missing,
-        :path => 'aaa.bbb'
-      )
+    specify 'when additional properties are present but disallowed' do
+      schema = {
+        '$schema' => 'http://json-schema.org/draft-04/schema#',
+        'type' => 'object',
+        'properties' => {
+          'aaa' => {'type' => 'number'}
+        },
+        'additionalProperties' => false
+      }
+
+      record = {'aaa' => 1, 'bbb' => 2, 'ccc' => 3}
+
+      error = 'Disallowed additional property: bbb'
+      expect([schema, record]).to fail_validation_with(error)
     end
 
     context 'when none of oneOf options match' do
@@ -83,10 +93,8 @@ describe Openc::JsonSchema do
       
         record = {'aaa' => {'a_type' => 'a1', 'a_properties' => {}}}
 
-        expect([schema, record]).to fail_validation_with(
-          :type => :missing,
-          :path => 'aaa.a_properties.bbb'
-        )
+        error = 'Missing required property: aaa.a_properties.bbb'
+        expect([schema, record]).to fail_validation_with(error)
       end
 
       specify 'and we are switching on a nested enum field' do
@@ -128,10 +136,8 @@ describe Openc::JsonSchema do
 
         record = {'xxx' => {'aaa' => {'a_type' => 'a1', 'a_properties' => {}}}}
 
-        expect([schema, record]).to fail_validation_with(
-          :type => :missing,
-          :path => 'xxx.aaa.a_properties.bbb'
-        )
+        error = 'Missing required property: xxx.aaa.a_properties.bbb'
+        expect([schema, record]).to fail_validation_with(error)
       end
 
       specify 'and we are not switching on an enum field' do
@@ -163,10 +169,8 @@ describe Openc::JsonSchema do
       
         record = {'aaa' => {'bbb' => {}}}
 
-        expect([schema, record]).to fail_validation_with(
-          :type => :one_of_no_matches,
-          :path => 'aaa'
-        )
+        error = 'No match for property: aaa'
+        expect([schema, record]).to fail_validation_with(error)
       end
     end
 
@@ -180,11 +184,8 @@ describe Openc::JsonSchema do
       }
       record = {'aaa' => 'x'}
 
-      expect([schema, record]).to fail_validation_with(
-        :type => :too_short,
-        :path => 'aaa',
-        :length => 2
-      )
+      error = 'Property too short: aaa (must be at least 2 characters)'
+      expect([schema, record]).to fail_validation_with(error)
     end
 
     specify 'when nested property too short' do
@@ -202,11 +203,8 @@ describe Openc::JsonSchema do
       }
       record = {'aaa' => {'bbb' => 'x'}}
 
-      expect([schema, record]).to fail_validation_with(
-        :type => :too_short,
-        :path => 'aaa.bbb',
-        :length => 2
-      )
+      error = 'Property too short: aaa.bbb (must be at least 2 characters)'
+      expect([schema, record]).to fail_validation_with(error)
     end
 
     specify 'when property too long' do
@@ -219,11 +217,8 @@ describe Openc::JsonSchema do
       }
       record = {'aaa' => 'xxx'}
 
-      expect([schema, record]).to fail_validation_with(
-        :type => :too_long,
-        :path => 'aaa',
-        :length => 2
-      )
+      error = 'Property too long: aaa (must be at most 2 characters)'
+      expect([schema, record]).to fail_validation_with(error)
     end
 
     specify 'when property of wrong type and many types allowed' do
@@ -236,11 +231,8 @@ describe Openc::JsonSchema do
       }
       record = {'aaa' => ['xxx']}
 
-      expect([schema, record]).to fail_validation_with(
-        :type => :type_mismatch,
-        :path => 'aaa',
-        :allowed_types => ['number', 'string']
-      )
+      error = 'Property of wrong type: aaa (must be of type number, string)'
+      expect([schema, record]).to fail_validation_with(error)
     end
 
     specify 'when property of wrong type and single type allowed' do
@@ -253,14 +245,11 @@ describe Openc::JsonSchema do
       }
       record = {'aaa' => 'xxx'}
 
-      expect([schema, record]).to fail_validation_with(
-        :type => :type_mismatch,
-        :path => 'aaa',
-        :allowed_types => ['number']
-      )
+      error = 'Property of wrong type: aaa (must be of type number)'
+      expect([schema, record]).to fail_validation_with(error)
     end
 
-    specify 'when property not in enum' do
+    specify 'when property not in enum and many values allowed' do
       schema = {
         '$schema' => 'http://json-schema.org/draft-04/schema#',
         'type' => 'object',
@@ -270,30 +259,22 @@ describe Openc::JsonSchema do
       }
       record = {'aaa' => 'z'}
 
-      expect([schema, record]).to fail_validation_with(
-        :type => :enum_mismatch,
-        :path => 'aaa',
-        :allowed_values => ['a', 'b', 'c']
-      )
+      error = 'Property not an allowed value: aaa (must be one of a, b, c)'
+      expect([schema, record]).to fail_validation_with(error)
     end
 
-    specify 'when additional properties are present but disallowed' do
+    specify 'when property not in enum and single value allowed' do
       schema = {
         '$schema' => 'http://json-schema.org/draft-04/schema#',
         'type' => 'object',
         'properties' => {
-          'aaa' => {'type' => 'number'}
-        },
-        'additionalProperties' => false
+          'aaa' => {'enum' => ['a']}
+        }
       }
+      record = {'aaa' => 'z'}
 
-      record = {'aaa' => 1, 'bbb' => 2, 'ccc' => 3}
-
-      expect([schema, record]).to fail_validation_with(
-        :type => :extra_properties,
-        :path => '',
-        :extra_properties => ['bbb', 'ccc']
-      )
+      error = 'Property must have value a: aaa'
+      expect([schema, record]).to fail_validation_with(error)
     end
 
     specify 'when property of wrong format' do
@@ -306,11 +287,8 @@ describe Openc::JsonSchema do
       }
       record = {'aaa' => 'zzz'}
 
-      expect([schema, record]).to fail_validation_with(
-        :type => :format_mismatch,
-        :path => 'aaa',
-        :expected_format => 'yyyy-mm-dd'
-      )
+      error = 'Property not of expected format: aaa (must be of format yyyy-mm-dd)'
+      expect([schema, record]).to fail_validation_with(error)
     end
 
     specify 'when property with format is empty' do
@@ -323,11 +301,8 @@ describe Openc::JsonSchema do
       }
       record = {'aaa' => ''}
 
-      expect([schema, record]).to fail_validation_with(
-        :type => :format_mismatch,
-        :path => 'aaa',
-        :expected_format => 'yyyy-mm-dd'
-      )
+      error = 'Property not of expected format: aaa (must be of format yyyy-mm-dd)'
+      expect([schema, record]).to fail_validation_with(error)
     end
 
     context 'when schema includes $ref' do
@@ -340,11 +315,8 @@ describe Openc::JsonSchema do
       specify 'when data is invalid' do
         schema_path = 'spec/schemas/aaa.json'
         record = {'aaa' => 1, 'bbb' => {'BBB' => '10'}}
-        expect([schema_path, record]).to fail_validation_with(
-          :type => :type_mismatch,
-          :path => 'bbb.BBB',
-          :allowed_types => ['number']
-        )
+        error = 'Property of wrong type: bbb.BBB (must be of type number)'
+        expect([schema_path, record]).to fail_validation_with(error)
       end
     end
 
@@ -358,11 +330,8 @@ describe Openc::JsonSchema do
       specify 'when data is invalid' do
         schema_path = 'spec/schemas/fff.json'
         record = {'fff' => {'ggg' => {'hhh' => '123'}}}
-        expect([schema_path, record]).to fail_validation_with(
-          :type => :type_mismatch,
-          :path => 'fff.ggg.hhh',
-          :allowed_types => ['number']
-        )
+        error = 'Property of wrong type: fff.ggg.hhh (must be of type number)'
+        expect([schema_path, record]).to fail_validation_with(error)
       end
 
       context 'and schema is an included schema' do
@@ -375,11 +344,8 @@ describe Openc::JsonSchema do
         specify 'when data is invalid' do
           schema_path = 'spec/schemas/includes/ggg.json'
           record = {'ggg' => {'hhh' => '123'}}
-          expect([schema_path, record]).to fail_validation_with(
-            :type => :type_mismatch,
-            :path => 'ggg.hhh',
-            :allowed_types => ['number']
-          )
+          error = 'Property of wrong type: ggg.hhh (must be of type number)'
+          expect([schema_path, record]).to fail_validation_with(error)
         end
       end
 
@@ -393,11 +359,8 @@ describe Openc::JsonSchema do
         specify 'when data is invalid' do
           schema_path = 'spec/schemas/iii.json'
           record = {'iii' => {'jjj' => {'kkk' => '123'}}}
-          expect([schema_path, record]).to fail_validation_with(
-            :type => :type_mismatch,
-            :path => 'iii.jjj.kkk',
-            :allowed_types => ['number']
-          )
+          error = 'Property of wrong type: iii.jjj.kkk (must be of type number)'
+          expect([schema_path, record]).to fail_validation_with(error)
         end
       end
     end
@@ -407,10 +370,8 @@ describe Openc::JsonSchema do
       record = {
         'mmm' => []
       }
-      expect([schema_path, record]).to fail_validation_with(
-        :type => :one_of_no_matches,
-        :path => 'mmm'
-      )
+      error = 'No match for property: mmm'
+      expect([schema_path, record]).to fail_validation_with(error)
     end
 
     specify 'when schema includes oneOfs which contain $refs indirectly' do
@@ -423,14 +384,11 @@ describe Openc::JsonSchema do
           }
         }
       }
-      expect([schema_path, record]).to fail_validation_with(
-        :type => :type_mismatch,
-        :path => 'ccc.ccc_properties.ddd',
-        :allowed_types => ['number'],
-      )
+      error = 'Property of wrong type: ccc.ccc_properties.ddd (must be of type number)'
+      expect([schema_path, record]).to fail_validation_with(error)
     end
 
-    specify '' do
+    specify 'when oneOf is used to dispatch on type' do
       schema = {
         '$schema' => 'http://json-schema.org/draft-04/schema#',
         'type' => 'object',
@@ -450,11 +408,8 @@ describe Openc::JsonSchema do
         }
       }
       record = {'aaa' => 'not-a-date'}
-      expect([schema, record]).to fail_validation_with(
-        :type => :format_mismatch,
-        :path => 'aaa',
-        :expected_format => 'yyyy-mm-dd'
-      )
+      error = 'Property not of expected format: aaa (must be of format yyyy-mm-dd)'
+      expect([schema, record]).to fail_validation_with(error)
     end
   end
 

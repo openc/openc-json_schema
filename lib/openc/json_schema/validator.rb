@@ -76,46 +76,52 @@ module Openc
       end
 
       def convert_error(error)
+        path = fragment_to_path(error[:fragment])
+
         case error[:failed_attribute]
         when 'Required'
           match = error[:message].match(/required property of '(.*)'/)
           missing_property = match[1]
           path = fragment_to_path("#{error[:fragment]}/#{missing_property}")
-
-          {:type => :missing, :path => path}
+          "Missing required property: #{path}"
+        when 'AdditionalProperties'
+          match = error[:message].match(/contains additional properties \["(.*)"\] outside of the schema/)
+          additional_property = match[1].split('", "')[0]
+          path = fragment_to_path("#{error[:fragment]}/#{additional_property}")
+          "Disallowed additional property: #{path}"
         when 'OneOf'
           if error[:message].match(/did not match any/)
-            {:type => :one_of_no_matches, :path => fragment_to_path(error[:fragment])}
+            "No match for property: #{path}"
           else
-            {:type => :one_of_many_matches, :path => fragment_to_path(error[:fragment])}
+            "Multiple possible matches for property: #{path}"
           end
         when 'AnyOf'
-          {:type => :any_of_no_matches, :path => fragment_to_path(error[:fragment])}
+          "No match for property: #{path}"
         when 'MinLength'
           match = error[:message].match(/minimum string length of (\d+) in/)
           min_length = match[1].to_i
-          {:type => :too_short, :path => fragment_to_path(error[:fragment]), :length => min_length}
+          "Property too short: #{path} (must be at least #{min_length} characters)"
         when 'MaxLength'
           match = error[:message].match(/maximum string length of (\d+) in/)
           max_length = match[1].to_i
-          {:type => :too_long, :path => fragment_to_path(error[:fragment]), :length => max_length}
+          "Property too long: #{path} (must be at most #{max_length} characters)"
         when 'TypeV4'
           match = error[:message].match(/the following types?: ([\w\s,]+) in schema/)
           allowed_types = match[1].split(',').map(&:strip)
-          {:type => :type_mismatch, :path => fragment_to_path(error[:fragment]), :allowed_types => allowed_types}
+          "Property of wrong type: #{path} (must be of type #{allowed_types.join(', ')})"
         when 'Enum'
           match = error[:message].match(/the following values: ([\w\s,]+) in schema/)
           allowed_values = match[1].split(',').map(&:strip)
-          {:type => :enum_mismatch, :path => fragment_to_path(error[:fragment]), :allowed_values => allowed_values}
-        when 'AdditionalProperties'
-          match = error[:message].match(/contains additional properties \["(.*)"\] outside of the schema/)
-          extra_properties = match[1].split('", "')
-          {:type => :extra_properties, :path => fragment_to_path(error[:fragment]), :extra_properties => extra_properties}
+          if allowed_values.size == 1
+            "Property must have value #{allowed_values[0]}: #{path}"
+          else
+            "Property not an allowed value: #{path} (must be one of #{allowed_values.join(', ')})"
+          end
         else
           if error[:message].match(/must be of format yyyy-mm-dd/)
-            {:type => :format_mismatch, :path => fragment_to_path(error[:fragment]), :expected_format => 'yyyy-mm-dd'}
+            "Property not of expected format: #{path} (must be of format yyyy-mm-dd)"
           else
-            {:type => :unknown, :path => fragment_to_path(error[:fragment]), :failed_attribute => error[:failed_attribute], :message => error[:message]}
+            "Error of unknown type: #{path} (#{error[:message]})"
           end
         end
       end
