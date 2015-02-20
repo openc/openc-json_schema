@@ -3,13 +3,17 @@ module Openc
     module Utils
       extend self
 
-      def load_validator(schema_path, record)
+      def load_validator(schema_path, record, options={})
+        default_options = {
+          :record_errors => true,
+          :errors_as_objects => true,
+          :validate_schema => false
+        }
+
         validator = JSON::Validator.new(
           schema_path,
           record,
-          :record_errors => true,
-          :errors_as_objects => true,
-          :validate_schema => true
+          default_options.merge(options)
         )
       end
 
