@@ -136,6 +136,9 @@ module Openc
             type = :format_mismatch
             message = "Property not of expected format: #{path} (must be of format yyyy-mm-dd)"
             extra_params = {:expected_format => 'yyyy-mm-dd'}
+          elsif error[:message].match(/must not be blank/)
+            type = :format_mismatch
+            message = "Property not of expected format: #{path} (must not be blank)"
           else
             type = :unknown
             message = "Error of unknown type: #{path} (#{error[:message]})"

@@ -277,7 +277,7 @@ describe Openc::JsonSchema do
       expect([schema, record]).to fail_validation_with(error)
     end
 
-    specify 'when property of wrong format' do
+    specify 'when date property of wrong format' do
       schema = {
         '$schema' => 'http://json-schema.org/draft-04/schema#',
         'type' => 'object',
@@ -291,7 +291,7 @@ describe Openc::JsonSchema do
       expect([schema, record]).to fail_validation_with(error)
     end
 
-    specify 'when property with format is empty' do
+    specify 'when date property is empty' do
       schema = {
         '$schema' => 'http://json-schema.org/draft-04/schema#',
         'type' => 'object',
@@ -302,6 +302,20 @@ describe Openc::JsonSchema do
       record = {'aaa' => ''}
 
       error = 'Property not of expected format: aaa (must be of format yyyy-mm-dd)'
+      expect([schema, record]).to fail_validation_with(error)
+    end
+
+    specify 'when non-blank property of wrong format' do
+      schema = {
+        '$schema' => 'http://json-schema.org/draft-04/schema#',
+        'type' => 'object',
+        'properties' => {
+          'aaa' => {'type' => 'string', 'format' => 'non-blank'}
+        }
+      }
+      record = {'aaa' => '   '}
+
+      error = 'Property not of expected format: aaa (must not be blank)'
       expect([schema, record]).to fail_validation_with(error)
     end
 
