@@ -11,7 +11,7 @@ date_format_validator = -> value {
 JSON::Validator.register_format_validator('date', date_format_validator)
 
 non_blank_format_validator = -> value {
-  raise JSON::Schema::CustomFormatError.new('must not be blank') if value.strip == ''
+  raise JSON::Schema::CustomFormatError.new('must not be blank') if value.is_a?(String) && value.strip == ''
 }
 
 JSON::Validator.register_format_validator('non-blank', non_blank_format_validator)
