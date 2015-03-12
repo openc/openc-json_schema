@@ -458,7 +458,7 @@ describe Openc::JsonSchema do
 
       record = {
         'aaa' => '2015-01-01 extra',
-        'bbb' => ['2015-01-01 extra', '2015-01-01 extra'],
+        'bbb' => ['2015-01-01 extra', nil],
         'ccc' => {
           'ddd' =>  '2015-01-01 extra'
         }
@@ -466,7 +466,7 @@ describe Openc::JsonSchema do
 
       expect([schema, record]).to convert_dates_to({
         'aaa' => '2015-01-01',
-        'bbb' => ['2015-01-01', '2015-01-01'],
+        'bbb' => ['2015-01-01', nil],
         'ccc' => {
           'ddd' =>  '2015-01-01'
         }

@@ -35,7 +35,7 @@ module Openc
           if schema['format'] == 'date'
             begin
               Date.strptime(record, '%Y-%m-%d').strftime('%Y-%m-%d')
-            rescue ArgumentError
+            rescue ArgumentError, TypeError
               record
             end
           else
