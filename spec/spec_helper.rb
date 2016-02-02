@@ -1,5 +1,9 @@
-require 'simplecov'
-SimpleCov.start
+require "simplecov"
+require "coveralls"
+SimpleCov.formatter = Coveralls::SimpleCov::Formatter
+SimpleCov.start do
+  add_filter "spec"
+end
 
 require 'openc/json_schema'
 
