@@ -1,3 +1,4 @@
+require 'json-pointer'
 require 'json-schema'
 
 require 'openc/json_schema/date_converter'

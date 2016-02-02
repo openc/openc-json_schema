@@ -425,6 +425,20 @@ describe Openc::JsonSchema do
       error = 'Property not of expected format: aaa (must be of format yyyy-mm-dd)'
       expect([schema, record]).to fail_validation_with(error)
     end
+
+    specify 'when oneOf is an item in an array' do
+      schema = {
+        'type' => 'array',
+        'items' => {
+          'oneOf' => [{
+            'type' => 'string',
+          }]
+        }
+      }
+      record = [1]
+      error = 'No match for property: 0'
+      expect([schema, record]).to fail_validation_with(error)
+    end
   end
 
   describe '.convert_dates' do
