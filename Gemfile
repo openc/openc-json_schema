@@ -1,6 +1,4 @@
-source 'https://rubygems.org'
+source "https://rubygems.org"
 
-# Specify your gem's dependencies in openc-json-schema.gemspec
+# Specify your gem's dependencies in the gemspec
 gemspec
-
-gem 'simplecov', :require => false

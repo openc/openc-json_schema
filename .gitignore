@@ -1,2 +1,4 @@
 spec/tmp/*.json
 coverage
+Gemfile.lock
+pkg/*
