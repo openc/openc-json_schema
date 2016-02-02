@@ -88,12 +88,14 @@ module Openc
           path = fragment_to_path("#{error[:fragment]}/#{missing_property}")
           type = :missing
           message = "Missing required property: #{path}"
+
         when 'AdditionalProperties'
           match = error[:message].match(/contains additional properties \["(.*)"\] outside of the schema/)
           additional_property = match[1].split('", "')[0]
           path = fragment_to_path("#{error[:fragment]}/#{additional_property}")
           type = :additional
           message = "Disallowed additional property: #{path}"
+
         when 'OneOf'
           if error[:message].match(/did not match any/)
             type = :one_of_no_matches
@@ -102,27 +104,32 @@ module Openc
             type = :one_of_many_matches
             message = "Multiple possible matches for property: #{path}"
           end
+
         when 'AnyOf'
           type = :any_of_no_matches
           message = "No match for property: #{path}"
+
         when 'MinLength'
           match = error[:message].match(/minimum string length of (\d+) in/)
           min_length = match[1].to_i
           type = :too_short
           message = "Property too short: #{path} (must be at least #{min_length} characters)"
           extra_params = {:length => min_length}
+
         when 'MaxLength'
           match = error[:message].match(/maximum string length of (\d+) in/)
           max_length = match[1].to_i
           type = :too_long
           message = "Property too long: #{path} (must be at most #{max_length} characters)"
           extra_params = {:length => max_length}
+
         when 'TypeV4'
           match = error[:message].match(/the following types?: ([\w\s,]+) in schema/)
           allowed_types = match[1].split(',').map(&:strip)
           type = :type_mismatch
           message = "Property of wrong type: #{path} (must be of type #{allowed_types.join(', ')})"
           extra_params = {:allowed_types => allowed_types}
+
         when 'Enum'
           match = error[:message].match(/the following values: ([\w\s,]+) in schema/)
           allowed_values = match[1].split(',').map(&:strip)
@@ -133,6 +140,7 @@ module Openc
             message = "Property not an allowed value: #{path} (must be one of #{allowed_values.join(', ')})"
           end
           extra_params = {:allowed_values => allowed_values}
+
         else
           if error[:message].match(/must be of format yyyy-mm-dd/)
             type = :format_mismatch
