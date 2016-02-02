@@ -15,7 +15,7 @@ Gem::Specification.new do |gem|
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.require_paths = ["lib"]
 
-  gem.add_dependency "json-schema-openc-fork", "0.0.1"
+  gem.add_dependency "json-schema", "~> 2.6.0"
 
   gem.add_development_dependency "bundler", "~> 1.7"
   gem.add_development_dependency "coveralls"
