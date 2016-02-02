@@ -38,33 +38,35 @@ module Openc
             record = JsonPointer.new(record, error[:fragment][1..-1]).value
             schema = JSON::Validator.schema_for_uri(error[:schema]).schema
 
-            one_of_schemas = walk_schema(schema, fragment_to_path(error[:fragment]).split('.'))
+            path = fragment_to_path(error[:fragment]).split('.')
+            one_of = walk_schema(schema, path).each_with_index
 
-            # When extracting oneOf error, only match against schemas for type.
-            schemas_for_type_with_ix = case record
+            # Try to report errors for relevant `oneOf` schemas only.
+            schemas_matching_type = case record
             when Hash
-              one_of_schemas.each_with_index.reject {|s, ix| s['properties'].nil?}
+              one_of.select{|schema, _| schema.key?('properties')}
             when String
-              one_of_schemas.each_with_index.select {|s, ix| s['type'] == 'string' || s['type'].nil? && s['properties'].nil?}
+              one_of.select{|schema, _| schema['type'] == 'string' || schema['type'].nil? && schema['properties'].nil?}
             when Integer
-              one_of_schemas.each_with_index.select {|s, ix| s['type'] == 'integer'}
+              one_of.select{|schema, _| schema['type'] == 'integer'}
             when Array
-              one_of_schemas.each_with_index.select {|s, ix| s['type'] == 'array'}
+              one_of.select{|schema, _| schema['type'] == 'array'}
             else
               raise "Unexpected type: #{record}"
             end
 
-            case schemas_for_type_with_ix.size
-            when 1
-              ix = schemas_for_type_with_ix[0][1]
-              return error[:errors][:"oneof_#{ix}"][0]
-            else
-              if record.is_a?(Hash)
-                schemas_for_type_with_ix.each do |s, ix|
-                  s['properties'].each do |k, v|
-                    if v['enum'] && v['enum'].include?(record[k])
-                      return error[:errors][:"oneof_#{ix}"][0]
-                    end
+            matches = schemas_matching_type.size
+
+            if matches == 1
+              i = schemas_matching_type[0][1]
+              return error[:errors][:"oneof_#{i}"][0]
+            end
+
+            if matches > 1 && record.is_a?(Hash)
+              schemas_matching_type.each do |schema, i|
+                schema['properties'].each do |key, value|
+                  if value['enum'] && value['enum'].include?(record[key])
+                    return error[:errors][:"oneof_#{i}"][0]
                   end
                 end
               end
