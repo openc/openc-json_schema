@@ -52,7 +52,7 @@ module Openc
             when Array
               one_of.select{|schema, _| schema['type'] == 'array'}
             else
-              raise "Unexpected type: #{record}"
+              raise "Unexpected type: #{record.inspect}"
             end
 
             matches = schemas_matching_type.size
