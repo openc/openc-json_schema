@@ -14,32 +14,38 @@ module Openc
         convert_error(extract_error(error, record, validator))
       end
 
+    private
+
+      # Returns the value of the `oneOf` keyword that is within the given schema
+      # at the given path.
+      #
+      # @param [Hash] schema a schema
+      # @param [Array<String>] path a path, based on a JSON Pointer
+      # @return [Array<Hash>] the value of the `oneOf` keyword
+      def walk_schema(schema, path)
+        if schema.key?('oneOf')
+          schema['oneOf']
+        elsif schema.key?('properties')
+          walk_schema(schema['properties'].fetch(path.shift), path)
+        elsif schema.key?('items')
+          walk_schema(schema['items'], path.drop(1))
+        end
+      end
+
       def extract_error(error, record, validator)
         if error[:failed_attribute] == 'OneOf'
           if error[:message].match(/did not match any/)
-            path_elements = fragment_to_path(error[:fragment]).split('.')
+            record = JsonPointer.new(record, error[:fragment][1..-1]).value
+            schema = JSON::Validator.schema_for_uri(error[:schema]).schema
 
-            json_schema = Utils.extract_json_schema(validator)
-            schema = json_schema.schema
+            one_of_schemas = walk_schema(schema, fragment_to_path(error[:fragment]).split('.'))
 
-            path_elements.each do |element|
-              record = record[element]
-              schema = schema['properties'][element]
-
-              if (ref = schema['$ref'])
-                schema_uri = validator.absolutize_ref_uri(ref, json_schema.uri)
-                json_schema = JSON::Validator.schema_reader.read(schema_uri)
-                schema = json_schema.schema
-              end
-            end
-
-            one_of_schemas = schema['oneOf']
-
+            # When extracting oneOf error, only match against schemas for type.
             schemas_for_type_with_ix = case record
             when Hash
               one_of_schemas.each_with_index.reject {|s, ix| s['properties'].nil?}
             when String
-              one_of_schemas.each_with_index.select {|s, ix| s['type'] == 'string' || (s['type'].nil? && s['properties'].nil?)}
+              one_of_schemas.each_with_index.select {|s, ix| s['type'] == 'string' || s['type'].nil? && s['properties'].nil?}
             when Integer
               one_of_schemas.each_with_index.select {|s, ix| s['type'] == 'integer'}
             when Array
@@ -49,8 +55,6 @@ module Openc
             end
 
             case schemas_for_type_with_ix.size
-            when 0
-              return error
             when 1
               ix = schemas_for_type_with_ix[0][1]
               return error[:errors][:"oneof_#{ix}"][0]
@@ -58,15 +62,11 @@ module Openc
               if record.is_a?(Hash)
                 schemas_for_type_with_ix.each do |s, ix|
                   s['properties'].each do |k, v|
-                    next if v['enum'].nil?
-
-                    if v['enum'].include?(record[k])
+                    if v['enum'] && v['enum'].include?(record[k])
                       return error[:errors][:"oneof_#{ix}"][0]
                     end
                   end
                 end
-              else
-                return error
               end
             end
           end
