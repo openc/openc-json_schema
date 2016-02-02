@@ -38,8 +38,8 @@ module Openc
             record = JsonPointer.new(record, error[:fragment][1..-1]).value
             schema = JSON::Validator.schema_for_uri(error[:schema]).schema
 
-            path = fragment_to_path(error[:fragment]).split('.')
-            one_of = walk_schema(schema, path).each_with_index
+            path = fragment_to_path(error[:fragment])
+            one_of = walk_schema(schema, path.split('.')).each_with_index
 
             # Try to report errors for relevant `oneOf` schemas only.
             schemas_matching_type = case record
@@ -52,7 +52,7 @@ module Openc
             when Array
               one_of.select{|schema, _| schema['type'] == 'array'}
             else
-              raise "Unexpected type: #{record.inspect}"
+              raise "Unexpected type #{record.class.name} for #{record.inspect} at #{path}"
             end
 
             matches = schemas_matching_type.size
