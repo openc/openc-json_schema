@@ -16,4 +16,4 @@ Bump the version in `lib/openc/json_schema/version.rb` according to the [Semanti
     git commit lib/openc/json_schema/version.rb -m 'Release new version'
     rake release # requires Rubygems credentials
 
-Finally, [rebuild the Docker image](https://github.com/openc/morph-docker-ruby#readme).
+Finally, [rebuild the Docker image](https://github.com/openc/morph-docker-ruby#readme) and deploy [morph](https://github.com/sebbacon/morph/).
