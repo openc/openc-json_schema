@@ -90,7 +90,7 @@ describe Openc::JsonSchema do
             }
           }
         }
-      
+
         record = {'aaa' => {'a_type' => 'a1', 'a_properties' => {}}}
 
         error = 'Missing required property: aaa.a_properties.bbb'
@@ -166,7 +166,7 @@ describe Openc::JsonSchema do
             }
           }
         }
-      
+
         record = {'aaa' => {'bbb' => {}}}
 
         error = 'No match for property: aaa'
@@ -303,6 +303,96 @@ describe Openc::JsonSchema do
 
       error = 'Property not of expected format: aaa (must be of format yyyy-mm-dd)'
       expect([schema, record]).to fail_validation_with(error)
+    end
+
+    specify 'when date property has a timestamp' do
+      schema = {
+        '$schema' => 'http://json-schema.org/draft-04/schema#',
+        'type' => 'object',
+        'properties' => {
+          'aaa' => {'type' => 'string', 'format' => 'date'}
+        }
+      }
+      record = {'aaa' => '2016-01-12T21:52:11Z'}
+
+      expect([schema, record]).to be_valid
+    end
+
+    specify 'when date property has a timestamp and a bad date' do
+      schema = {
+        '$schema' => 'http://json-schema.org/draft-04/schema#',
+        'type' => 'object',
+        'properties' => {
+          'aaa' => {'type' => 'string', 'format' => 'date'}
+        }
+      }
+      dates = ["2016-03-13",
+"2016-03-21",
+"2016-03-12T14:58:51.941787",
+"2016-03-15",
+"2016-03-12T15:01:27.767907",
+"2016-03-12T13:28:59.947478",
+"2016-03-12T11:30:18.731536",
+"2016-03-13",
+"2016-03-13",
+"2016-03-12T11:17:52.814474",
+"2016-03-12T15:12:46.227805",
+"2016-03-12T15:45:03.405024",
+"2016-03-12T13:17:15.362714",
+"2016-03-15",
+"2016-03-13",
+"2016-03-23",
+"2016-03-12T08:20:02.088387",
+"2016-03-21",
+"2016-03-13",
+"2016-03-21",
+"2016-03-11T17:54:20.247649",
+"2016-03-12",
+"2016-03-12T15:07:20.572849",
+"2016-03-20",
+"2016-03-13",
+"2016-03-12T11:24:07.573208",
+"2016-03-20",
+"2016-03-11T17:31:38.482306",
+"2016-03-16",
+"2016-03-12T15:15:13.430171",
+"2016-03-11T17:07:26.781185",
+"2016-03-12T13:33:24.754198",
+"2016-03-15",
+"2016-03-20",
+"2016-03-12",
+"2016-03-15",
+"2016-03-12T14:04:36.597795",
+"2016-03-24",
+"2016-03-11T13:20:40.231104",
+"2016-03-16",
+"2016-03-20",
+"2016-03-12",
+"2016-03-23",
+"2016-03-15",
+"2016-03-24",
+"2016-03-24",
+"2016-03-23",
+"2015-10-02 10:15:56 +0000",
+"2015-02-28 17:32:37 +0000",
+"2016-03-18 10:35:30 +0000",
+"2016-03-07 09:48:23 +0000",
+"2016-03-10 12:27:33 +0000",
+"2015-02-28 18:04:19 +0000",
+"2015-03-04 18:14:14 +0000",
+"2015-03-09 10:44:52 +0000",
+"2015-04-29 17:49:37 +0000",
+"2015-09-04 13:35:52 +0000",
+"2016-03-10 09:39:21 +0000",
+"2016-03-11 12:28:38 +0000",
+"2016-03-11 10:37:50 +0000",
+"2015-09-18 11:48:50 +0000"]
+      dates.each do |d|
+        puts d
+        record = {'aaa' => d}
+
+        expect([schema, record]).to be_valid
+      end
     end
 
     specify 'when non-blank property of wrong format' do

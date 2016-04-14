@@ -17,6 +17,8 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency "json-schema", "~> 2.6.0"
   gem.add_dependency "json-pointer"
+  gem.add_dependency "openc_json_schema_formats"
+  gem.add_dependency "json_validation"
 
   gem.add_development_dependency "coveralls"
   gem.add_development_dependency "rake", "~> 10.0"
