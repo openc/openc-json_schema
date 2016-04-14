@@ -21,4 +21,9 @@ In [morph](https://github.com/sebbacon/morph), run:
     bundle update openc-json_schema
     git commit Gemfile.lock -m 'Bump openc-json_schema' && git push
 
+Bear in mind that a morph deploy doesn't restart the resque workers;
+you'll need to do this explicitly with:
+
+    cap production resque:restart
+
 Finally, [rebuild the Docker image](https://github.com/openc/morph-docker-ruby#readme) and deploy [morph](https://github.com/sebbacon/morph).
